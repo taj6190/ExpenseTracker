@@ -7,12 +7,15 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI;
 const options = {
-  maxPoolSize: 10,
+  maxPoolSize: 50,
+  minPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
   connectTimeoutMS: 10000,
   retryWrites: true,
   retryReads: true,
+  maxIdleTimeMS: 60000,
+  waitQueueTimeoutMS: 10000,
 };
 
 let client;
@@ -28,6 +31,10 @@ async function connectToDatabase() {
     return client;
   } catch (error) {
     console.error("MongoDB connection error:", error);
+    // In production, we want to fail fast if we can't connect to the database
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
     throw error;
   }
 }
@@ -68,6 +75,10 @@ export const getMongoDb = async () => {
     return db;
   } catch (error) {
     console.error("Error getting MongoDB database:", error);
+    // In production, we want to fail fast if we can't connect to the database
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
     throw new Error("Failed to connect to database: " + error.message);
   }
 };
